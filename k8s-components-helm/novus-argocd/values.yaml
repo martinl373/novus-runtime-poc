@@ -1,0 +1,6 @@
+argo-cd:
+  replicaCount: 1
+  
+  configs:
+    params:
+      application.namespaces: "*-runtime"

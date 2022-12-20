@@ -1,0 +1,11 @@
+apiVersion: v2
+name: novus-kyverno
+description: Kyverno - With Novus Platform configuration 
+type: application
+version: 0.1.0
+appVersion: "1.8.5"
+
+dependencies:
+  - name: kyverno
+    version: "2.6.5"
+    repository: "https://kyverno.github.io/kyverno"

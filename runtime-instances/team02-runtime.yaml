@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: team-sad-kids-runtime
+  labels:
+    novus.legogroup.io/namespace-type: managed-runtime
+  annotations:
+    novus.legogroup.io/argocd-root-repo-url: 'https://github.com/martinl373/team2-argo-monotest.git'
+    novus.legogroup.io/argocd-root-repo-path: 'argo-apps'
+    novus.legogroup.io/argocd-root-repo-rev: 'main'

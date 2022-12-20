@@ -1,0 +1,48 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: runtime-generate-argocd-app-of-apps
+spec:
+  rules:
+    - name: runtime-generate-argocd-app-of-apps
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+              selector:
+                matchLabels:
+                  novus.legogroup.io/namespace-type: managed-runtime
+      generate:
+        kind: Application
+        apiVersion: argoproj.io/v1alpha1
+        name: "{{ request.object.metadata.name }}"
+        namespace: argocd
+        synchronize: true
+        data:
+          metadata:
+            ownerReferences:
+              - apiVersion: v1
+                kind: Namespace
+                name: "{{request.object.metadata.name}}"
+                uid: "{{request.object.metadata.uid}}"
+          spec:
+            project: novus-runtime-apps
+            destination:
+              name: ""
+              namespace: "{{ request.object.metadata.name }}"
+              server: "https://kubernetes.default.svc"
+            source:
+              repoURL: '{{ request.object.metadata.annotations."novus.legogroup.io/argocd-root-repo-url" }}'
+              targetRevision: '{{ request.object.metadata.annotations."novus.legogroup.io/argocd-root-repo-rev" }}'
+              path: '{{ request.object.metadata.annotations."novus.legogroup.io/argocd-root-repo-path" }}'
+              directory:
+                recurse: true
+            ignoreDifferences:
+              - group: argoproj.io
+                kind: Application
+                jsonPointers:
+                  - /spec/destination/name
+                  - /spec/destination/namespace
+                  - /spec/destination/server
+                  - /spec/project

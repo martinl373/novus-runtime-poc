@@ -1,0 +1,21 @@
+apiVersion: argoproj.io/v1alpha1
+kind: AppProject
+metadata:
+  name: novus-runtimes
+  namespace: argocd
+spec:
+  description: "Project containing novus managed app-of-apps deployments."
+  destinations:
+    - namespace: "*-runtime"
+      server: https://kubernetes.default.svc
+  sourceRepos:
+    - "*"
+  sourceNamespaces:
+    - "argocd"
+  clusterResourceBlacklist:
+    - group: "*"
+      kind: "*"
+  namespaceResourceWhitelist:
+    - group: argoproj.io
+      kind: Application
+

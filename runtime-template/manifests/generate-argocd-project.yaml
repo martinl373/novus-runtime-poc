@@ -1,10 +1,17 @@
 apiVersion: kyverno.io/v1
 kind: ClusterPolicy
 metadata:
-  name: runtime-generate-argocd-project
+  name: generate-runtime-argocd-project
+  annotations:
+    policies.kyverno.io/title: Generate ArgoCD Project
+    policies.kyverno.io/category: novus-runtime
+    policies.kyverno.io/description: >-
+      For every runtime created there should exist one ArgoCD project
+      that will contain the user defined application deployments. This
+      rule will create that for each namespace marked as a Novus runtime.
 spec:
   rules:
-    - name: runtime-generate-argocd-project
+    - name: generate-runtime-argocd-project
       match:
         any:
           - resources:
@@ -13,6 +20,12 @@ spec:
               selector:
                 matchLabels:
                   novus.legogroup.io/namespace-type: managed-runtime
+
+      context:
+        - name: runtime
+          variable:
+            jmesPath: request.object.metadata
+
       generate:
         kind: AppProject
         apiVersion: argoproj.io/v1alpha1
@@ -24,14 +37,14 @@ spec:
             ownerReferences:
               - apiVersion: v1
                 kind: Namespace
-                name: "{{request.object.metadata.name}}"
-                uid: "{{request.object.metadata.uid}}"
+                name: "{{ runtime.name }}"
+                uid: "{{ runtime.uid }}"
           spec:
             destinations:
               - name: "*"
-                namespace: "{{ request.object.metadata.name }}"
+                namespace: "{{ runtime.name }}"
                 server: https://kubernetes.default.svc
             sourceRepos:
               - "*"
             sourceNamespaces:
-              - "{{ request.object.metadata.name }}"
+              - "{{ runtime.name }}"

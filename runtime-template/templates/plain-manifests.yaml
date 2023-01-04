@@ -1,0 +1,5 @@
+{{ range $path, $_ :=  .Files.Glob  "manifests/*.yaml" }}
+---
+## Content-From: {{ $path }}
+{{ $.Files.Get $path }}
+{{ end }}

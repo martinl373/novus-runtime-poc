@@ -4,6 +4,7 @@ metadata:
   name: novus-system
   namespace: argocd
 spec:
+  description: "Project containing novus system applications and services."
   destinations:
     - name: "*"
       namespace: "*"

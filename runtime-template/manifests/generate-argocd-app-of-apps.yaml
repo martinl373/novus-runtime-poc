@@ -1,0 +1,63 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: generate-runtime-argocd-application
+  annotations:
+    policies.kyverno.io/title: Generate ArgoCD Application
+    policies.kyverno.io/category: novus-runtime
+    policies.kyverno.io/description: >-
+      For every runtime created there should exist one ArgoCD application
+      that fetches the ArgoCD deployment definitions for that runtime. This
+      rule will create that for each namespace marked as a Novus.
+spec:
+  rules:
+    - name: generate-runtime-argocd-application
+      match:
+        any:
+          - resources:
+              kinds:
+                - Namespace
+              selector:
+                matchLabels:
+                  novus.legogroup.io/namespace-type: managed-runtime
+      
+      context:
+        - name: runtime
+          variable:
+            jmesPath: request.object.metadata
+      
+      generate:
+        kind: Application
+        apiVersion: argoproj.io/v1alpha1
+        name: "{{ runtime.name }}"
+        namespace: argocd
+        synchronize: true
+        data:
+          metadata:
+            ownerReferences:
+              - apiVersion: v1
+                kind: Namespace
+                name: "{{ runtime.name }}"
+                uid: "{{ runtime.uid }}"
+          spec:
+            project: novus-runtimes
+            destination:
+              namespace: "{{ runtime.name }}"
+              server: "https://kubernetes.default.svc"
+            source:
+              repoURL: '{{ runtime.annotations."novus.legogroup.io/argocd-root-repo-url" }}'
+              targetRevision: '{{ runtime.annotations."novus.legogroup.io/argocd-root-repo-rev" }}'
+              path: '{{ runtime.annotations."novus.legogroup.io/argocd-root-repo-path" }}'
+              directory:
+                recurse: true
+            syncPolicy:
+              automated:
+                prune: true
+            ignoreDifferences:
+              - group: argoproj.io
+                kind: Application
+                jsonPointers:
+                  - /spec/destination/name
+                  - /spec/destination/namespace
+                  - /spec/destination/server
+                  - /spec/project

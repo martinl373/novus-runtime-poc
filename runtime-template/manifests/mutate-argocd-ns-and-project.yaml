@@ -1,0 +1,29 @@
+apiVersion: kyverno.io/v1
+kind: ClusterPolicy
+metadata:
+  name: mutate-runtime-argocd-applications
+  annotations:
+    policies.kyverno.io/title: Contain user apps to namespace and project
+    policies.kyverno.io/category: novus-runtime
+    policies.kyverno.io/description: >-
+      For every user created ArgoCD application this rule will make sure it is
+      bound to the right project and target the right namespace.
+spec:
+  rules:
+    - name: mutate-runtime-argocd-applications
+      match:
+        any:
+          - resources:
+              kinds:
+                - Application
+              namespaceSelector:
+                matchLabels:
+                  novus.legogroup.io/namespace-type: managed-runtime
+      
+      mutate:
+        patchStrategicMerge:
+          spec:
+            project: "{{ request.object.metadata.namespace }}"
+            destination:
+              namespace: "{{ request.object.metadata.namespace }}"
+              server: "https://kubernetes.default.svc"
